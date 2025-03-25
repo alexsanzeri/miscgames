@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://b81jy3ssi5d1q"]
+
+[ext_resource type="Script" uid="uid://b6qd3ljwubyvm" path="res://TestWebSocket.gd" id="1_gr7qw"]
+
+[node name="HostScreen" type="Node2D"]
+script = ExtResource("1_gr7qw")
+
+[node name="RoomCodeLabel" type="Label" parent="."]
+offset_left = 384.0
+offset_top = 275.0
+offset_right = 759.0
+offset_bottom = 330.0
+theme_override_font_sizes/font_size = 36
+text = "Room Code: ABC123"

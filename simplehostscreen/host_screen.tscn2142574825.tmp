@@ -12,15 +12,3 @@ offset_right = 759.0
 offset_bottom = 330.0
 theme_override_font_sizes/font_size = 36
 text = "Room Code: ABC123"
-
-[node name="RoomCodeField" type="LineEdit" parent="."]
-offset_right = 68.5625
-offset_bottom = 31.0
-
-[node name="JoinRoomButton" type="Button" parent="."]
-offset_right = 8.0
-offset_bottom = 8.0
-
-[node name="ActionButton" type="Button" parent="."]
-offset_right = 8.0
-offset_bottom = 8.0
