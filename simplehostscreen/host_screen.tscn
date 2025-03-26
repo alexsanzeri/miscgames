@@ -5,22 +5,42 @@
 [node name="HostScreen" type="Node2D"]
 script = ExtResource("1_gr7qw")
 
-[node name="RoomCodeLabel" type="Label" parent="."]
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="RoomCodeLabel" type="Label" parent="Control"]
+layout_mode = 0
 offset_left = 384.0
 offset_top = 275.0
 offset_right = 759.0
 offset_bottom = 330.0
 theme_override_font_sizes/font_size = 36
-text = "Room Code: ABC123"
 
-[node name="RoomCodeField" type="LineEdit" parent="."]
-offset_right = 68.5625
-offset_bottom = 31.0
+[node name="RoomCodeField" type="LineEdit" parent="Control"]
+layout_mode = 0
+offset_left = 234.0
+offset_top = 106.0
+offset_right = 875.0
+offset_bottom = 511.0
 
-[node name="JoinRoomButton" type="Button" parent="."]
-offset_right = 8.0
-offset_bottom = 8.0
+[node name="JoinRoomButton" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 306.0
+offset_right = 315.0
+offset_bottom = 472.0
 
-[node name="ActionButton" type="Button" parent="."]
-offset_right = 8.0
-offset_bottom = 8.0
+[node name="ActionButton" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 78.0
+offset_top = 67.0
+offset_right = 442.0
+offset_bottom = 218.0
+
+[node name="StatusLabel" type="Label" parent="Control"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0

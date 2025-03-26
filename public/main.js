@@ -1,40 +1,53 @@
-// main.js
+const ws = new WebSocket("ws://localhost:3000"); // ← This is fine if server handles it
 
-// Create a WebSocket pointing to our Node server
-const ws = new WebSocket("ws://localhost:3000");
+let playerName = "";
 
-// When the connection opens
 ws.onopen = () => {
-  console.log("Connected to raw WebSocket server!");
+  console.log("✅ Connected to game server");
+  playerName = prompt("Enter your player name") || "anon";
 };
 
-// Handle incoming messages
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
-  // We handle "player_joined" and "action_broadcast" just like before
+  console.log("📥 Received:", data);
+
   if (data.type === "player_joined") {
-    alert("A new player joined the room!");
+    alert(`🎮 ${data.playerId} joined room ${data.roomCode}`);
   } else if (data.type === "action_broadcast") {
-    console.log("Action broadcast received:", data);
-    alert(`Action from room ${data.roomCode}: ${data.action}`);
+    console.log("📨 Action broadcast:", data);
   }
 };
 
-// Button: Join the room
-document.getElementById('joinBtn').addEventListener('click', () => {
-  const roomCode = document.getElementById('roomCodeInput').value.trim();
+document.getElementById("joinBtn").addEventListener("click", () => {
+  const roomCode = document.getElementById("roomCodeInput").value.trim().toUpperCase();
+
+  if (!roomCode) {
+    alert("❗ Please enter a room code.");
+    return;
+  }
+
   ws.send(JSON.stringify({
     type: "join_room",
-    roomCode
+    roomCode: roomCode,
+    playerId: playerName
   }));
+
+  console.log(`📤 Sent join_room with code ${roomCode}`);
 });
 
-// Button: Send an action
-document.getElementById('actionBtn').addEventListener('click', () => {
-  const roomCode = document.getElementById('roomCodeInput').value.trim();
+document.getElementById("actionBtn").addEventListener("click", () => {
+  const roomCode = document.getElementById("roomCodeInput").value.trim().toUpperCase();
+
+  if (!roomCode) {
+    alert("❗ Please enter a room code first.");
+    return;
+  }
+
   ws.send(JSON.stringify({
     type: "player_action",
-    roomCode,
+    roomCode: roomCode,
     action: "ACTION_EXAMPLE"
   }));
+
+  console.log("📤 Sent action for room:", roomCode);
 });

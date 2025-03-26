@@ -4,88 +4,89 @@ extends Node2D
 
 var ws := WebSocketPeer.new()
 var is_ws_connected := false
+var room_code := ""
 
-@onready var room_code_field: LineEdit = $RoomCodeField
-@onready var join_button: Button = $JoinRoomButton
-@onready var action_button: Button = $ActionButton
+@onready var room_code_label: Label = get_node("Control/RoomCodeLabel")
 
 func _ready() -> void:
+	room_code = generate_room_code()
+	room_code_label.text = "Room Code: %s" % room_code
+	print("🧩 Room Code for this session:", room_code)
+
 	var err = ws.connect_to_url(socket_url)
 	if err != OK:
 		push_error("❌ Failed to connect to %s (Error %d)" % [socket_url, err])
 	else:
 		print("🟡 Connecting to:", socket_url)
 
-	join_button.pressed.connect(_on_join_button_pressed)
-	action_button.pressed.connect(_on_action_button_pressed)
+	# Wait a moment to ensure connection is ready
+	await get_tree().create_timer(1.0).timeout
+	join_room_as_host()
 
 func _process(_delta: float) -> void:
 	ws.poll()
 
 	match ws.get_ready_state():
 		WebSocketPeer.STATE_CONNECTING:
-			pass  # Still connecting...
+			pass
 		WebSocketPeer.STATE_OPEN:
 			if not is_ws_connected:
 				is_ws_connected = true
-				print("✅ WebSocket connection established!")
+				print("✅ WebSocket connection established. Listening for joins...")
 
 			while ws.get_available_packet_count() > 0:
-				var message = ws.get_packet().get_string_from_utf8()
-				handle_message(message)
+				var msg = ws.get_packet().get_string_from_utf8()
+				handle_message(msg)
 		WebSocketPeer.STATE_CLOSING:
-			print("WebSocket is closing...")
+			print("🔌 Closing connection...")
 		WebSocketPeer.STATE_CLOSED:
 			if is_ws_connected:
 				is_ws_connected = false
-				print("🚫 WebSocket connection closed.")
+				print("❌ Disconnected from server")
 
 func handle_message(message: String) -> void:
-	var result = JSON.parse_string(message)
-	if result.error != OK:
+	print("📥 Message from server:", message)
+
+	var parsed = JSON.parse_string(message)
+	if parsed == null:
 		print("⚠️ Failed to parse JSON:", message)
 		return
 
-	var data = result.result
-	match data.get("type", ""):
+	var data: Dictionary = parsed
+	var msg_type = data.get("type", "")
+
+	match msg_type:
 		"player_joined":
-			print("🎮 A player joined the room!")
+			var joined_room = data.get("roomCode", "")
+			if joined_room == room_code:
+				var player_name = data.get("playerId", "unknown")
+				print("🎉 Player '%s' joined room %s!" % [player_name, joined_room])
+			else:
+				print("👀 Ignored join for different room:", joined_room)
+
 		"action_broadcast":
-			print("📨 Action received:", data.get("action"))
+			var action = data.get("action", "unknown")
+			print("📨 Action received:", action)
+
 		_:
-			print("ℹ️ Unknown message type:", data)
+			print("ℹ️ Unknown message type:", msg_type)
 
-func _on_join_button_pressed() -> void:
-	var room_code = room_code_field.text.strip_edges()
-	join_room(room_code)
-
-func _on_action_button_pressed() -> void:
-	var room_code = room_code_field.text.strip_edges()
-	send_player_action(room_code, "ACTION_EXAMPLE")
-
-func join_room(room_code: String) -> void:
+func join_room_as_host():
 	if ws.get_ready_state() != WebSocketPeer.STATE_OPEN:
-		print("❌ Not connected. Can't join room.")
+		print("🚫 Not connected. Cannot host room.")
 		return
 
-	var payload = {
+	var msg = {
 		"type": "join_room",
-		"roomCode": room_code
-	}
-	var msg = JSON.stringify(payload)
-	ws.put_packet(msg.to_utf8())
-	print("📤 Sent join_room for:", room_code)
-
-func send_player_action(room_code: String, action: String) -> void:
-	if ws.get_ready_state() != WebSocketPeer.STATE_OPEN:
-		print("❌ Not connected. Can't send action.")
-		return
-
-	var payload = {
-		"type": "player_action",
 		"roomCode": room_code,
-		"action": action
+		"playerId": "GodotHost"
 	}
-	var msg = JSON.stringify(payload)
-	ws.put_packet(msg.to_utf8())
-	print("📤 Sent action:", action, "for room:", room_code)
+	ws.put_packet(JSON.stringify(msg).to_utf8_buffer())
+	print("📤 Godot host joined room:", room_code)
+
+func generate_room_code() -> String:
+	var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	var code := ""
+	for i in 4:
+		code += chars[randi() % chars.length()]
+	return code
